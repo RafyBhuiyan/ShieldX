@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ShieldX Quarantine Vault (Do NOT commit quarantined malware or local scan logs)
+quarantine/*.q
+quarantine/index.json
+quarantine/
+
+# Distribution / packaging (PyInstaller, cx_Freeze, etc.)
+build/
+dist/
+*.spec
+*.egg-info/
+.eggs/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Environment variables & local logs
+*.log
+.env
+.env.local
