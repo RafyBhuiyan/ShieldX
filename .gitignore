@@ -11,10 +11,9 @@ ENV/
 env.bak/
 venv.bak/
 
-# ShieldX Quarantine Vault (Do NOT commit quarantined malware or local scan logs)
-quarantine/*.q
-quarantine/index.json
-quarantine/
+# ShieldX Quarantine Vault (Keep directory structure, ignore all quarantined items & logs)
+quarantine/*
+!quarantine/.gitkeep
 
 # Distribution / packaging (PyInstaller, cx_Freeze, etc.)
 build/
