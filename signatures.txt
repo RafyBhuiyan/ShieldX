@@ -1,2 +1,7 @@
 # format: sha256_hash,malware_name
 368ad37fbb239f78dabf5c0b820cd3a8ae40438f696f0121bd1993a20aef3702,Trojan.Demo
+44d88612fea8a8f36de82e1278abb02f,EICAR-Test-File
+275a021bbfb6489e54d471899f7db9d1,EICAR-Standard-AV-Test
+131f95c51cc819465fa1797f6cc7614c,Trojan.Generic.Sample
+5e884898da28047151d0e56f8dc62927,Ransomware.Test.Payload
+c96c6d5ebb64016239670009792edb00,Backdoor.Test.Script
