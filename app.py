@@ -25,24 +25,95 @@ class App(ctk.CTk):
 
     # ---------------- Scan tab ----------------
     def build_scan(self, tab):
-        ctk.CTkButton(tab, text="Choose Folder & Scan", height=40,command=self.start_scan).pack(pady=10)
+        top_frame = ctk.CTkFrame(tab, fg_color="transparent")
+        top_frame.pack(fill="x", pady=(10, 5))
+
+        ctk.CTkButton(
+            top_frame,
+            text="Choose Folder & Scan",
+            height=38,
+            font=("Segoe UI", 13, "bold"),
+            command=self.start_scan
+        ).pack(side="left", padx=(10, 10))
+
+        self.select_all_btn = ctk.CTkButton(
+            top_frame,
+            text="Select All",
+            width=90,
+            command=self.select_all_threats,
+            state="disabled"
+        )
+        self.select_all_btn.pack(side="left", padx=5)
+
+        self.deselect_all_btn = ctk.CTkButton(
+            top_frame,
+            text="Deselect All",
+            width=90,
+            command=self.deselect_all_threats,
+            state="disabled"
+        )
+        self.deselect_all_btn.pack(side="left", padx=5)
+
         self.progress = ctk.CTkProgressBar(tab, width=600)
         self.progress.set(0)
         self.progress.pack(pady=5)
-        self.status = ctk.CTkLabel(tab, text="Ready")
+        self.status = ctk.CTkLabel(tab, text="Ready to scan", font=("Segoe UI", 13))
         self.status.pack()
-        self.results = ctk.CTkTextbox(tab, height=250)
-        self.results.pack(fill="both", expand=True, pady=10)
-        ctk.CTkButton(tab, text="Quarantine All Threats", fg_color="#c0392b",command=self.quarantine_all).pack(pady=5)
+
+        # Scrollable frame for interactive threat items
+        self.scan_results_frame = ctk.CTkScrollableFrame(tab, height=260)
+        self.scan_results_frame.pack(fill="both", expand=True, padx=5, pady=8)
+
+        self.scan_empty_label = ctk.CTkLabel(
+            self.scan_results_frame,
+            text="No scan has been run yet. Click 'Choose Folder & Scan' to begin.",
+            text_color="gray"
+        )
+        self.scan_empty_label.pack(pady=40)
+
+        # Bottom action buttons
+        btn_frame = ctk.CTkFrame(tab, fg_color="transparent")
+        btn_frame.pack(fill="x", pady=(0, 5))
+
+        self.quarantine_selected_btn = ctk.CTkButton(
+            btn_frame,
+            text="Quarantine Selected",
+            fg_color="#e67e22",
+            hover_color="#d35400",
+            font=("Segoe UI", 13, "bold"),
+            command=self.quarantine_selected,
+            state="disabled"
+        )
+        self.quarantine_selected_btn.pack(side="right", padx=10)
+
+        self.quarantine_all_btn = ctk.CTkButton(
+            btn_frame,
+            text="Quarantine All Threats",
+            fg_color="#c0392b",
+            hover_color="#962d22",
+            font=("Segoe UI", 13, "bold"),
+            command=self.quarantine_all,
+            state="disabled"
+        )
+        self.quarantine_all_btn.pack(side="right", padx=5)
 
     def start_scan(self):
         folder = filedialog.askdirectory()
         if not folder:
             return
-        self.results.delete("1.0", "end")
-        self.found = []
+        self.clear_scan_results()
         self.progress.set(0)
+        self.status.configure(text=f"Scanning folder: {os.path.basename(folder)}...")
+        self.quarantine_selected_btn.configure(state="disabled")
+        self.quarantine_all_btn.configure(state="disabled")
+        self.select_all_btn.configure(state="disabled")
+        self.deselect_all_btn.configure(state="disabled")
         threading.Thread(target=self.run_scan, args=(folder,), daemon=True).start()
+
+    def clear_scan_results(self):
+        for w in self.scan_results_frame.winfo_children():
+            w.destroy()
+        self.found = []
 
     def run_scan(self, folder):
         def prog(i, n, p):
@@ -52,31 +123,188 @@ class App(ctk.CTk):
         self.after(0, self.show_results, threats)
 
     def show_results(self, threats):
-        self.found = threats
+        self.clear_scan_results()
         self.progress.set(1)
         if not threats:
             self.status.configure(text="✅ Scan complete — no threats found")
-            self.results.insert("end", "No threats found.\n")
+            ctk.CTkLabel(
+                self.scan_results_frame,
+                text="✅ Clean! No threats found in the scanned folder.",
+                font=("Segoe UI", 14),
+                text_color="#2ecc71"
+            ).pack(pady=40)
+            self.quarantine_selected_btn.configure(state="disabled")
+            self.quarantine_all_btn.configure(state="disabled")
+            self.select_all_btn.configure(state="disabled")
+            self.deselect_all_btn.configure(state="disabled")
             return
-        self.status.configure(text=f"⚠ {len(threats)} threat(s) found")
-        for path, name, method in threats:
-            self.results.insert("end", f"[{method}] {name}\n   {path}\n\n")
 
-    def quarantine_all(self):
+        self.status.configure(text=f"⚠ {len(threats)} threat(s) found")
+        self.quarantine_selected_btn.configure(state="normal")
+        self.quarantine_all_btn.configure(state="normal")
+        self.select_all_btn.configure(state="normal")
+        self.deselect_all_btn.configure(state="normal")
+
+        for path, name, method in threats:
+            var = ctk.BooleanVar(value=True)
+            row = ctk.CTkFrame(self.scan_results_frame)
+            row.pack(fill="x", pady=3, padx=5)
+
+            # Checkbox for selective picking
+            chk = ctk.CTkCheckBox(row, text="", variable=var, width=24)
+            chk.pack(side="left", padx=(8, 4))
+
+            # Details
+            info = ctk.CTkFrame(row, fg_color="transparent")
+            info.pack(side="left", fill="x", expand=True, padx=6, pady=4)
+
+            badge_color = "#e74c3c" if method == "Signature" else "#e67e22" if method == "Heuristic" else "#9b59b6"
+
+            header_line = ctk.CTkFrame(info, fg_color="transparent")
+            header_line.pack(fill="x", anchor="w")
+
+            ctk.CTkLabel(
+                header_line,
+                text=f"[{method}]",
+                font=("Segoe UI", 12, "bold"),
+                text_color=badge_color
+            ).pack(side="left", padx=(0, 6))
+
+            ctk.CTkLabel(
+                header_line,
+                text=f"{name}  —  {os.path.basename(path)}",
+                font=("Segoe UI", 12, "bold")
+            ).pack(side="left")
+
+            ctk.CTkLabel(
+                info,
+                text=path,
+                font=("Segoe UI", 10),
+                text_color="gray",
+                anchor="w"
+            ).pack(fill="x")
+
+            entry = {
+                "path": path,
+                "name": name,
+                "method": method,
+                "var": var,
+                "row": row
+            }
+
+            # Individual Quarantine button
+            ctk.CTkButton(
+                row,
+                text="Quarantine",
+                width=85,
+                height=28,
+                fg_color="#c0392b",
+                hover_color="#962d22",
+                command=lambda e=entry: self.quarantine_single(e)
+            ).pack(side="right", padx=10, pady=6)
+
+            self.found.append(entry)
+
+    def select_all_threats(self):
+        for e in self.found:
+            e["var"].set(True)
+
+    def deselect_all_threats(self):
+        for e in self.found:
+            e["var"].set(False)
+
+    def quarantine_single(self, entry):
+        path = entry["path"]
+        name = entry["name"]
+        if not os.path.exists(path):
+            messagebox.showinfo("Notice", f"File already removed or not found:\n{path}")
+            if entry in self.found:
+                self.found.remove(entry)
+            entry["row"].destroy()
+            self._update_scan_state_after_action()
+            return
+
+        try:
+            q.quarantine(path, name)
+            entry["row"].destroy()
+            if entry in self.found:
+                self.found.remove(entry)
+            self.refresh_quarantine()
+            self._update_scan_state_after_action()
+            messagebox.showinfo("Success", f"Quarantined:\n{os.path.basename(path)}")
+        except OSError as e:
+            messagebox.showerror("Error", f"Could not quarantine {path}:\n{e}")
+
+    def quarantine_selected(self):
+        selected = [e for e in self.found if e["var"].get()]
+        if not selected:
+            messagebox.showinfo("Notice", "No threats selected.\nCheck the box next to threats you want to quarantine.")
+            return
+
         count = 0
-        for path, name, _ in self.found:
+        failed = 0
+        for entry in selected:
+            path = entry["path"]
+            name = entry["name"]
             try:
                 if os.path.exists(path):
                     q.quarantine(path, name)
                     count += 1
-            except OSError as e:
-                self.results.insert("end", f"Could not quarantine {path}: {e}\n")
-        self.results.insert("end", f"\n{count} file(s) moved to quarantine.\n")
-        self.found = []
-        self.refresh_quarantine()
+                entry["row"].destroy()
+                if entry in self.found:
+                    self.found.remove(entry)
+            except OSError:
+                failed += 1
 
-    # ---------------- Real-time tab ----------------
-    # ---------------- Real-time tab ----------------
+        self.refresh_quarantine()
+        self._update_scan_state_after_action()
+        msg = f"{count} threat(s) moved to quarantine."
+        if failed > 0:
+            msg += f"\n{failed} file(s) could not be quarantined (file in use or locked)."
+        messagebox.showinfo("Quarantine Completed", msg)
+
+    def quarantine_all(self):
+        if not self.found:
+            return
+
+        count = 0
+        failed = 0
+        for entry in list(self.found):
+            path = entry["path"]
+            name = entry["name"]
+            try:
+                if os.path.exists(path):
+                    q.quarantine(path, name)
+                    count += 1
+                entry["row"].destroy()
+                if entry in self.found:
+                    self.found.remove(entry)
+            except OSError:
+                failed += 1
+
+        self.refresh_quarantine()
+        self._update_scan_state_after_action()
+        msg = f"{count} threat(s) moved to quarantine."
+        if failed > 0:
+            msg += f"\n{failed} file(s) could not be quarantined."
+        messagebox.showinfo("Quarantine All Completed", msg)
+
+    def _update_scan_state_after_action(self):
+        remaining = len(self.found)
+        if remaining == 0:
+            self.status.configure(text="✅ All detected threats have been handled")
+            ctk.CTkLabel(
+                self.scan_results_frame,
+                text="✅ All detected threats have been quarantined.",
+                font=("Segoe UI", 13),
+                text_color="#2ecc71"
+            ).pack(pady=40)
+            self.quarantine_selected_btn.configure(state="disabled")
+            self.quarantine_all_btn.configure(state="disabled")
+            self.select_all_btn.configure(state="disabled")
+            self.deselect_all_btn.configure(state="disabled")
+        else:
+            self.status.configure(text=f"⚠ {remaining} threat(s) remaining")
     def build_realtime(self, tab):
         default = os.path.join(os.path.expanduser("~"), "Downloads")
         self.watch_path = ctk.StringVar(value=default)
