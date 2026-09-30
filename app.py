@@ -76,50 +76,82 @@ class App(ctk.CTk):
         self.refresh_quarantine()
 
     # ---------------- Real-time tab ----------------
+    # ---------------- Real-time tab ----------------
     def build_realtime(self, tab):
         default = os.path.join(os.path.expanduser("~"), "Downloads")
         self.watch_path = ctk.StringVar(value=default)
         ctk.CTkLabel(tab, text="Folder to protect:").pack(pady=(10, 0))
-        ctk.CTkEntry(tab, textvariable=self.watch_path, width=500).pack(pady=5)
+
+        path_frame = ctk.CTkFrame(tab, fg_color="transparent")
+        path_frame.pack(pady=5)
+        self.watch_entry = ctk.CTkEntry(path_frame, textvariable=self.watch_path, width=420)
+        self.watch_entry.pack(side="left", padx=(0, 8))
+        self.browse_btn = ctk.CTkButton(path_frame, text="Browse", width=80, command=self.browse_watch_path)
+        self.browse_btn.pack(side="left")
+
         self.rt_switch = ctk.CTkSwitch(tab, text="Real-Time Protection",
                                        command=self.toggle_rt)
         self.rt_switch.pack(pady=10)
         self.rt_log = ctk.CTkTextbox(tab, height=300)
         self.rt_log.pack(fill="both", expand=True, pady=10)
 
+    def browse_watch_path(self):
+        initial = self.watch_path.get().strip()
+        if not os.path.isdir(initial):
+            initial = os.path.expanduser("~")
+        folder = filedialog.askdirectory(initialdir=initial)
+        if folder:
+            self.watch_path.set(folder)
+
     def toggle_rt(self):
+        watch_dir = self.watch_path.get().strip()
         if self.rt_switch.get():
+            if not os.path.isdir(watch_dir):
+                self.rt_switch.deselect()
+                messagebox.showerror("Error", f"Folder does not exist:\n{watch_dir}")
+                return
             try:
-                self.monitor = RealTimeMonitor(self.watch_path.get(), self.on_new_file)
+                self.monitor = RealTimeMonitor(watch_dir, self.on_new_file)
                 self.monitor.start()
-                self.log(f"🟢 Protection ON — watching {self.watch_path.get()}")
+                self.log(f"🟢 Protection ON — watching {watch_dir}")
             except Exception as e:
                 self.rt_switch.deselect()
                 messagebox.showerror("Error", f"Cannot watch folder:\n{e}")
         else:
             if self.monitor:
                 self.monitor.stop()
+                self.monitor = None
             self.log("🔴 Protection OFF")
 
     def on_new_file(self, path):
-        if os.path.abspath(path).startswith(q.QDIR) or not os.path.exists(path):
+        abs_path = os.path.abspath(path)
+        abs_qdir = os.path.abspath(q.QDIR)
+        # Prevent scanning files within quarantine directory or missing files
+        if os.path.normcase(abs_path).startswith(os.path.normcase(abs_qdir)) or not os.path.exists(abs_path):
             return
-        result = scan_file(path)
+
+        result = scan_file(abs_path)
         if result:
             name, method = result
+            quarantined = False
             try:
-                q.quarantine(path, name)
+                quarantined = q.quarantine(abs_path, name)
             except OSError:
-                pass
-            self.after(0, self.alert, path, name, method)
+                quarantined = False
+            self.after(0, self.alert, abs_path, name, method, quarantined)
         else:
-            self.after(0, self.log, f"✔ Clean: {os.path.basename(path)}")
+            self.after(0, self.log, f"✔ Clean: {os.path.basename(abs_path)}")
 
-    def alert(self, path, name, method):
-        self.log(f"⚠ THREAT BLOCKED [{method}] {name} → {os.path.basename(path)}")
-        self.refresh_quarantine()
-        messagebox.showwarning("ShieldX — Threat Detected!",
-            f"Threat: {name}\nMethod: {method}\nFile: {path}\n\nFile has been quarantined.")
+    def alert(self, path, name, method, quarantined=True):
+        if quarantined:
+            self.log(f"⚠ THREAT BLOCKED [{method}] {name} → {os.path.basename(path)}")
+            self.refresh_quarantine()
+            messagebox.showwarning("ShieldX — Threat Detected!",
+                f"Threat: {name}\nMethod: {method}\nFile: {path}\n\nFile has been quarantined.")
+        else:
+            self.log(f"⚠ THREAT DETECTED [{method}] {name} → {os.path.basename(path)} (Quarantine pending/locked)")
+            messagebox.showwarning("ShieldX — Threat Detected!",
+                f"Threat: {name}\nMethod: {method}\nFile: {path}\n\nWarning: Threat detected, but file could not be quarantined immediately (file may be open in another application).")
 
     def log(self, msg):
         self.rt_log.insert("end", msg + "\n")
