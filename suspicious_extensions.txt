@@ -1,0 +1,40 @@
+# ==============================================================================
+# ShieldX - Suspicious File Extensions Database
+# ==============================================================================
+# Format: .extension (one per line, case-insensitive)
+# Used by heuristic scanning to detect double-extension masquerading tricks
+# (e.g. document.pdf.exe or invoice.xlsx.vbs)
+# Lines starting with '#' are comments.
+# ==============================================================================
+
+# --- Windows Executables & Binaries ---
+.exe      # Standard Windows Executable
+.com      # MS-DOS / Windows Command binary
+.scr      # Windows Screen Saver (commonly abused for hidden malware)
+.pif      # Program Information File shortcut/executable
+.cpl      # Windows Control Panel Item / binary
+.dll      # Dynamic Link Library
+
+# --- Scripts & Shell Execution ---
+.bat      # Windows Batch file
+.cmd      # Windows Command script
+.ps1      # PowerShell script
+.psm1     # PowerShell module script
+.vbs      # VBScript script
+.vbe      # VBScript Encoded script
+.js       # JavaScript script (WSH)
+.jse      # JScript Encoded script
+.wsf      # Windows Script File
+.wsh      # Windows Script Host settings
+.hta      # HTML Application (executes mshta with full local privileges)
+
+# --- Shortcuts & Shell Links ---
+.lnk      # Windows Shell Shortcut (frequently abused in spear-phishing)
+
+# --- Installers & Packages ---
+.msi      # Microsoft Windows Installer Package
+.msp      # Windows Installer Patch
+.jar      # Executable Java Archive
+
+# --- Registry & Configuration ---
+.reg      # Windows Registry script

@@ -1,0 +1,54 @@
+# ==============================================================================
+# ShieldX - Suspicious Strings & Code Patterns Database
+# ==============================================================================
+# Format: pattern,threat_label
+# If threat_label is omitted, it defaults to: Suspicious code: <pattern>
+# Lines starting with '#' are comments.
+# Scanned within the first 2 MB of inspected files.
+# ==============================================================================
+
+# --- EICAR Standard Antivirus Test Pattern ---
+X5O!P%@AP,EICAR-Test-Pattern
+
+# --- Ransomware / System Recovery Tampering ---
+vssadmin delete shadows,Ransomware: Shadow copy deletion
+vssadmin.exe delete shadows,Ransomware: Shadow copy deletion
+wbadmin delete catalog,Ransomware: Backup catalog deletion
+wmic shadowcopy delete,Ransomware: Shadow copy destruction via WMIC
+bcdedit /set {default} bootstatuspolicy ignoreallfailures,Ransomware: Disabling boot failure recovery
+bcdedit /set {default} recoveryenabled no,Ransomware: Disabling Windows recovery mode
+
+# --- Obfuscated & Living-off-the-Land Shell Execution ---
+powershell -enc,Obfuscated PowerShell: Base64 encoded payload
+powershell -encodedcommand,Obfuscated PowerShell: Encoded command flag
+powershell.exe -w hidden,Stealth PowerShell: Hidden window execution
+powershell -nop -exec bypass,PowerShell: ExecutionPolicy bypass
+cmd.exe /c,Shell Execution: Spawning secondary command prompt
+certutil -urlcache -split -f,Malicious Download: Living-off-the-land certutil cradle
+bitsadmin /transfer,Malicious Download: BITSadmin background transfer
+mshta vbscript:,Malicious Script: Inline VBScript via MSHTA
+mshta javascript:,Malicious Script: Inline JavaScript via MSHTA
+regsvr32 /s /u /i,Malicious Execution: Squiblydoo regsvr32 bypass
+rundll32.exe javascript:,Malicious Execution: In-memory JavaScript via RunDLL32
+
+# --- Process Injection & Memory Manipulation APIs ---
+CreateRemoteThread,Process Injection: CreateRemoteThread API
+VirtualAllocEx,Process Injection: Remote memory allocation
+WriteProcessMemory,Process Injection: Remote memory write
+QueueUserAPC,Process Injection: Asynchronous Procedure Call injection
+NtQueueApcThread,Process Injection: Native APC thread queueing
+SetThreadContext,Process Injection: Thread context hijacking
+Process32First,Process Enumeration: Snapshot iteration API
+Process32Next,Process Enumeration: Snapshot iteration API
+
+# --- Keylogging & Credential Access APIs ---
+GetAsyncKeyState,Spyware / Keylogger: Polling keystroke state
+GetKeyboardState,Spyware / Keylogger: Reading keyboard buffer
+SetWindowsHookEx,Spyware / Keylogger: Low-level keyboard hook
+MiniDumpWriteDump,Credential Theft: LSASS process memory dumping
+
+# --- Web Shells & Script Backdoors ---
+eval(base64_decode,Backdoor: Obfuscated eval base64 payload
+eval(gzinflate,Backdoor: Obfuscated eval compressed payload
+shell_exec(,Backdoor: PHP shell command execution
+passthru(,Backdoor: PHP direct command execution

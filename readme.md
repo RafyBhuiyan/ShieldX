@@ -102,12 +102,26 @@ python app.py
 3. **Restore**: Decrypts the file and restores it back to its original location (useful for false positives).
 4. **Delete**: Permanently and securely removes the quarantined file from disk.
 
-### 4. Adding Custom Signatures
-You can add your own SHA-256 malware signatures into `signatures.txt`:
-```text
-# format: sha256_hash,malware_name
-368ad37fbb239f78dabf5c0b820cd3a8ae40438f696f0121bd1993a20aef3702,Trojan.Demo
-```
+### 4. Customizing Detection Rules
+ShieldX externalizes all detection definitions into simple text files so you can expand them without modifying code:
+
+* **SHA-256 Signatures (`signatures.txt`)**:
+  ```text
+  # format: sha256_hash,malware_name
+  368ad37fbb239f78dabf5c0b820cd3a8ae40438f696f0121bd1993a20aef3702,Trojan.Demo
+  ```
+* **Suspicious File Extensions (`suspicious_extensions.txt`)**:
+  ```text
+  .exe
+  .scr
+  .vbs
+  ```
+* **Suspicious Strings & Patterns (`suspicious_strings.txt`)**:
+  ```text
+  # format: pattern,threat_label
+  powershell -enc,Obfuscated PowerShell execution
+  vssadmin delete shadows,Ransomware: Shadow copy deletion
+  ```
 
 ---
 
@@ -124,12 +138,14 @@ You can verify the scanner safely using either:
 
 ```
 ShieldX/
-├── app.py             # Main CustomTkinter desktop user interface
-├── scanner.py         # Detection engine (hashes, heuristics, string rules)
-├── monitor.py         # Watchdog real-time filesystem observer
-├── quarantine.py      # XOR obfuscation, isolation, index & recovery manager
-├── signatures.txt     # Known malware hash signatures
-├── requirements.txt   # Python package dependencies
-├── readme.md          # Documentation and setup instructions
-└── quarantine/        # Directory storing safely encrypted quarantined files
+├── app.py                      # Main CustomTkinter desktop user interface
+├── scanner.py                  # Detection engine (hashes, heuristics, string rules)
+├── monitor.py                  # Watchdog real-time filesystem observer
+├── quarantine.py               # XOR obfuscation, isolation, index & recovery manager
+├── signatures.txt              # Known malware hash signatures
+├── suspicious_extensions.txt   # Target file extensions for heuristic double-extension checks
+├── suspicious_strings.txt      # Malicious command & code pattern database
+├── requirements.txt            # Python package dependencies
+├── readme.md                   # Documentation and setup instructions
+└── quarantine/                 # Directory storing safely encrypted quarantined files
 ```

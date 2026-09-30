@@ -16,5 +16,23 @@
     "original": "D:/test\\test_virus.txt",
     "threat": "Trojan.Demo",
     "time": "2026-10-01 01:11:23"
+  },
+  {
+    "id": "6e026e8c3b9f46f6937e057a721c22cb",
+    "original": "D:/test\\free_game.pdf.exe",
+    "threat": "Double-Extension-Trick",
+    "time": "2026-10-01 02:21:15"
+  },
+  {
+    "id": "6e77eac06b6e452a8d927e9cbfc9e0dc",
+    "original": "D:/test\\script.txt",
+    "threat": "Obfuscated PowerShell: Base64 encoded payload",
+    "time": "2026-10-01 02:21:15"
+  },
+  {
+    "id": "f5350c26f3894a01ad2e2b0b9c71d56b",
+    "original": "D:/test\\test_virus.txt",
+    "threat": "Trojan.Demo",
+    "time": "2026-10-01 02:21:15"
   }
 ]

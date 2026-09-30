@@ -1,26 +1,67 @@
-import hashlib, os
+import hashlib
+import os
 
-# Hash of the official EICAR antivirus test file
-EICAR_HASH = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"
+BASE = os.path.dirname(os.path.abspath(__file__))
 
-SUSPICIOUS_EXT = {".exe", ".bat", ".cmd", ".vbs", ".ps1", ".scr", ".js"}
-SUSPICIOUS_STRINGS = [
-    b"powershell -enc", b"cmd.exe /c", b"GetAsyncKeyState",
-    b"CreateRemoteThread", b"vssadmin delete shadows", b"X5O!P%@AP",
-]
-
-def load_signatures(path="signatures.txt"):
-    sigs = {EICAR_HASH: "EICAR-Test-File"}
+def load_signatures(path=None):
+    """Loads SHA-256 signatures strictly from signatures.txt."""
+    if path is None:
+        path = os.path.join(BASE, "signatures.txt")
+    sigs = {}
     if os.path.exists(path):
-        with open(path) as f:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#"):
-                    h, _, name = line.partition(",")
-                    sigs[h.lower()] = name or "Malware"
+                    clean = line.split("#")[0].strip()
+                    if clean:
+                        h, _, name = clean.partition(",")
+                        sigs[h.strip().lower()] = name.strip() or "Malware"
     return sigs
 
+def load_suspicious_extensions(path=None):
+    """Loads suspicious file extensions strictly from suspicious_extensions.txt."""
+    if path is None:
+        path = os.path.join(BASE, "suspicious_extensions.txt")
+    exts = set()
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                ext = line.split("#")[0].strip().lower()
+                if ext:
+                    if not ext.startswith("."):
+                        ext = "." + ext
+                    exts.add(ext)
+    return exts
+
+def load_suspicious_strings(path=None):
+    """Loads suspicious code substrings and threat labels strictly from suspicious_strings.txt."""
+    if path is None:
+        path = os.path.join(BASE, "suspicious_strings.txt")
+    patterns = {}
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                clean = line.split("#")[0].strip()
+                if not clean:
+                    continue
+                pattern, _, label = clean.partition(",")
+                pattern = pattern.strip()
+                label = label.strip() or f"Suspicious code: {pattern}"
+                if pattern:
+                    patterns[pattern.lower().encode()] = label
+    return patterns
+
+# Load all rules strictly from dataset files
 SIGNATURES = load_signatures()
+SUSPICIOUS_EXT = load_suspicious_extensions()
+SUSPICIOUS_STRINGS = load_suspicious_strings()
 
 def sha256(path):
     h = hashlib.sha256()
@@ -45,9 +86,9 @@ def scan_file(path):
         # 3. Pattern matching inside the file
         with open(path, "rb") as f:
             data = f.read(2 * 1024 * 1024).lower()
-        for s in SUSPICIOUS_STRINGS:
-            if s.lower() in data:
-                return f"Suspicious code: {s.decode()}", "Pattern"
+        for pattern_bytes, label in SUSPICIOUS_STRINGS.items():
+            if pattern_bytes in data:
+                return label, "Pattern"
     except (PermissionError, OSError):
         return None
     return None
