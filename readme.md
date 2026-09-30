@@ -33,7 +33,7 @@ Follow these step-by-step instructions to get ShieldX up and running on your sys
 ### 1. Clone or Download the Project
 If cloning via Git:
 ```bash
-git clone https://github.com/your-username/ShieldX.git
+git clone https://github.com/RafyBhuiyan/ShieldX.git
 cd ShieldX
 ```
 Or simply open your terminal (Command Prompt, PowerShell, or Bash) in the project directory:
