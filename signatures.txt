@@ -1,0 +1,2 @@
+# format: sha256_hash,malware_name
+368ad37fbb239f78dabf5c0b820cd3a8ae40438f696f0121bd1993a20aef3702,Trojan.Demo

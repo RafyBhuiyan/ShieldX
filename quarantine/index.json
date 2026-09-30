@@ -1,0 +1,20 @@
+[
+  {
+    "id": "7bd7bd03a945402eb9c14dc340f617e3",
+    "original": "D:/test\\free_game.pdf.exe",
+    "threat": "Double-Extension-Trick",
+    "time": "2026-10-01 01:11:23"
+  },
+  {
+    "id": "6b075a3a74b34e689420f31b11479910",
+    "original": "D:/test\\script.txt",
+    "threat": "Suspicious code: powershell -enc",
+    "time": "2026-10-01 01:11:23"
+  },
+  {
+    "id": "3fd62b90f8d646e6a97cc84edbd4c65c",
+    "original": "D:/test\\test_virus.txt",
+    "threat": "Trojan.Demo",
+    "time": "2026-10-01 01:11:23"
+  }
+]
